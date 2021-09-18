@@ -2,7 +2,7 @@ from flask import Flask, render_template, request
 import numpy as np
 import joblib
 import nltk   
-nltk.download('all')
+nltk.download('stopwords')
 import os
 
 from nltk.corpus import stopwords
@@ -22,9 +22,11 @@ def submit():
     #HTML TO PY
     if request.method=="POST":
         tweet_text=request.form.get('tweet_text')
+        print(tweet_text)
     
         try:
-            prediction = preprocessDataAndPredict(tweet_text)
+            prediction = preprocess_text(tweet_text)
+            print(prediction)
             #pass prediction to template
             return render_template('predict.html',
                                     tweet = tweet_text,
@@ -37,7 +39,7 @@ def submit():
     pass
 
 
-def preprocessDataAndPredict(tweet_text):
+def preprocess_text(tweet_text):
 
     #pre processing steps like lower case, stemming and lemmatization
     tweet_text = tweet_text.lower()
@@ -48,19 +50,27 @@ def preprocessDataAndPredict(tweet_text):
 
     tweet_text = " ".join ([st.stem(word) for word in tweet_text.split()])
     tweet_text = " ".join ([Word(word).lemmatize() for word in tweet_text.split()])
- #open file
+    print("After stem-lem", tweet_text)
+    #open file
     file_model = open('sentiment.pkl', "rb")
+    print("sentiment.pkl",file_model)
     file_tfidf_vect = open('tfidf.pkl', "rb")
+    print("file_tfidf_vect",file_tfidf_vect)
 
     #load the trained model
     trained_model = joblib.load(file_model)
+    print("trained_model",trained_model)
     tfidf_vect = joblib.load(file_tfidf_vect)
+    print("tfidf_vect",tfidf_vect)
 
     new_tweet_tfidf =  tfidf_vect.transform([tweet_text])
+    print("new_tweet_tfidf",new_tweet_tfidf) 
 
     prediction = trained_model.predict(new_tweet_tfidf)
+    print("prediction",prediction) 
 
     return prediction
+
 
 
 
